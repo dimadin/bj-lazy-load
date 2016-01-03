@@ -98,8 +98,8 @@ class BJLL {
 		//$jsver = filemtime( dirname( dirname( __FILE__ ) ) . '/js/bj-lazy-load.js' );
 		//wp_enqueue_script( 'BJLL', plugins_url( 'js/bj-lazy-load.js', dirname( __FILE__ ) ), null, $jsver, true );
 		//$jsver = filemtime( dirname( dirname( __FILE__ ) ) . '/js/bj-lazy-load.v1.min.js' );
-		$jsver = 2;
-		wp_enqueue_script( 'BJLL', plugins_url( 'js/bj-lazy-load.min.js', dirname( __FILE__ ) ), null, $jsver, true );
+		$jsver = 3;
+		wp_enqueue_script( 'BJLL', plugins_url( 'js/bj-lazy-load.js', dirname( __FILE__ ) ), null, $jsver, true );
 
 		$bjll_options = array();
 		$threshold = intval( self::_get_option('threshold') );
@@ -124,6 +124,7 @@ class BJLL {
 
 			if ( 'yes' == self::_get_option('lazy_load_iframes') ) {
 				add_filter( 'bjll/filter', array( __CLASS__, 'filter_iframes' ) );
+				add_filter( 'bjll/filter', array( __CLASS__, 'filter_scripts' ) );
 			}
 
 			if ( 'yes' == self::_get_option( 'filter_content' ) ) {
@@ -263,6 +264,36 @@ class BJLL {
 		}
 		
 		$content = str_replace( $search, $replace, $content );
+
+		return $content;
+
+	}
+
+	/**
+	 * Replace scripts with placeholders in the content
+	 *
+	 * @param string $content The HTML to do the filtering on
+	 * @return string The HTML with the scripts replaced
+	 */
+	public static function filter_scripts( $content ) {
+
+		$placeholder_url = self::_get_option( 'placeholder_url' );
+		$placeholder_url = apply_filters( 'bjll/placeholder_url', $placeholder_url, 'image' );
+		if ( ! strlen( $placeholder_url ) ) {
+			$placeholder_url = 'data:image/gif;base64,R0lGODdhAQABAPAAAP///wAAACwAAAAAAQABAEACAkQBADs=';
+		}
+
+		$content = self::_get_content_haystack( $content );
+
+		// Set default scripts
+		$twitter_src = '//platform.twitter.com/widgets.js';
+
+		// Replace Twitter
+		if ( strpos( $content, $twitter_src ) ) {
+			$search = '<script async src="' . $twitter_src . '" charset="utf-8"></script>';
+			$replace = '<img src="' . esc_attr( $placeholder_url ) . '"  class="lazy lazy-hidden" data-lazy-type="script" data-lazy-src="' . esc_attr( $twitter_src ) . '" alt="">';
+			$content = str_replace( $search, $replace, $content );
+		}
 
 		return $content;
 

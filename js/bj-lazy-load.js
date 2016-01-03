@@ -66,6 +66,10 @@ var BJLL = {
 			div.innerHTML = s;
 			var iframe = div.firstChild;
 			el.parentNode.replaceChild( iframe, el );
+		} else if ( 'script' == type ) {
+			var s = el.getAttribute('data-lazy-src');
+
+			BJLL.addScript( s, el );
 		}
 
 	},
@@ -88,6 +92,17 @@ var BJLL = {
 		} else {
 			el.fireEvent( "on" + event.eventType, event );
 		}
+	},
+
+	addScript: function( url, el ) {
+		var js;
+
+		js = document.createElement( 'script' );
+		js.type = 'text/javascript';
+		js.src = url;
+		js.async = true;
+
+		el.parentNode.replaceChild( js, el );
 	}
 
 }
